@@ -365,7 +365,10 @@ function formatClock(seconds: number) {
 export function KhqrPayment({ checkout }: { checkout: Checkout }) {
   const { order, busy, error, secondsLeft, expired } = checkout
   const [saving, setSaving] = React.useState(false)
+  // Which card image finished loading (a renewed QR has a new URL, so the spinner shows again)
+  const [loadedUrl, setLoadedUrl] = React.useState<string | null>(null)
   if (!order) return null
+  const loaded = loadedUrl === order.qrUrl
   const urgent = secondsLeft <= 60
   const progress = Math.min(100, (secondsLeft / 600) * 100)
 
@@ -406,8 +409,15 @@ export function KhqrPayment({ checkout }: { checkout: Checkout }) {
           alt={`KHQR ${formatPrice(order.total)}`}
           width={560}
           height={844}
+          onLoad={() => setLoadedUrl(order.qrUrl)}
           className={cn("block h-auto w-full", expired && "opacity-25 blur-[3px]")}
         />
+        {!loaded && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white">
+            <Loader2 className="size-10 animate-spin text-primary" />
+            <p className="text-sm font-medium text-muted-foreground">កំពុងបង្កើត QR…</p>
+          </div>
+        )}
         {expired && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
             <p className="text-xl font-bold">QR ផុតកំណត់ហើយ</p>
